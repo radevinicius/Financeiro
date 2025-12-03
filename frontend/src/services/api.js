@@ -2,11 +2,12 @@ import axios from 'axios';
 
 // Criar instância do axios
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: 'https://financeiro-k3z7.onrender.com/api',
     headers: {
         'Content-Type': 'application/json'
     }
 });
+
 
 // Interceptor para adicionar token JWT
 api.interceptors.request.use(
