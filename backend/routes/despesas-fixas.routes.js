@@ -38,7 +38,9 @@ router.get('/total', authenticateToken, async (req, res) => {
             [req.user.id]
         );
 
-        res.json({ total: result.total });
+        // Garantir que total nunca seja null
+        const total = result?.total ?? 0;
+        res.json({ total: parseFloat(total) || 0 });
     } catch (error) {
         console.error('Erro ao calcular total:', error);
         res.status(500).json({ error: 'Erro ao calcular total' });
