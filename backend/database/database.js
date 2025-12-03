@@ -84,12 +84,37 @@ export async function createDefaultCategories(userId) {
 }
 
 /**
+ * Helper para converter valores numéricos do PostgreSQL
+ * PostgreSQL retorna DECIMAL/NUMERIC como strings, precisamos converter para números
+ */
+function convertNumericValues(rows) {
+  if (!rows || rows.length === 0) return rows;
+
+  return rows.map(row => {
+    const converted = { ...row };
+    for (const key in converted) {
+      const value = converted[key];
+      // Converter strings numéricas para números
+      if (typeof value === 'string' && !isNaN(value) && value.trim() !== '') {
+        // Verificar se é um número válido
+        const num = parseFloat(value);
+        if (!isNaN(num)) {
+          converted[key] = num;
+        }
+      }
+    }
+    return converted;
+  });
+}
+
+/**
  * Helper para executar query SELECT (retorna array de objetos)
  */
 export async function query(sql, params = []) {
   try {
     const result = await pool.query(sql, params);
-    return result.rows;
+    // Converter valores numéricos automáticamente
+    return convertNumericValues(result.rows);
   } catch (error) {
     console.error('Erro ao executar query:', error);
     throw error;
@@ -122,7 +147,12 @@ export async function run(sql, params = []) {
 export async function getOne(sql, params = []) {
   try {
     const result = await pool.query(sql, params);
-    return result.rows[0] || null;
+    const row = result.rows[0] || null;
+    if (row) {
+      // Converter valores numéricos
+      return convertNumericValues([row])[0];
+    }
+    return null;
   } catch (error) {
     console.error('Erro ao buscar registro:', error);
     throw error;
