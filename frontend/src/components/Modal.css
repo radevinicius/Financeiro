@@ -99,6 +99,15 @@
 
 .ios-modal-content {
     padding: var(--spacing-lg);
+    padding-bottom: 100px;
+    /* Extra space for bottom navigation on mobile */
     overflow-y: auto;
     flex: 1;
+}
+
+/* Add safe area support for devices with notches */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .ios-modal-content {
+        padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    }
 }
