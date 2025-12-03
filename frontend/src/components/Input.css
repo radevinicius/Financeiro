@@ -1,0 +1,78 @@
+/* iOS Input Styles */
+
+.ios-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    width: 100%;
+}
+
+.ios-input-label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ios-text-secondary);
+    margin-left: 4px;
+}
+
+.ios-input-required {
+    color: var(--ios-red);
+    margin-left: 2px;
+}
+
+.ios-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--ios-background-secondary);
+    border: 1px solid var(--ios-gray4);
+    border-radius: var(--ios-radius);
+    padding: 12px 16px;
+    transition: all var(--transition-fast);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ios-input-wrapper.focused {
+    border-color: var(--ios-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ios-input-wrapper.error {
+    border-color: var(--ios-red);
+}
+
+.ios-input-wrapper.error.focused {
+    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ios-input-icon {
+    display: flex;
+    align-items: center;
+    margin-right: var(--spacing-sm);
+    color: var(--ios-text-tertiary);
+    font-size: 1.2em;
+}
+
+.ios-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: var(--font-primary);
+    font-size: var(--text-base);
+    color: var(--ios-text-primary);
+}
+
+.ios-input::placeholder {
+    color: var(--ios-text-tertiary);
+}
+
+.ios-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ios-input-error-text {
+    font-size: var(--text-xs);
+    color: var(--ios-red);
+    margin-left: 4px;
+}

@@ -1,0 +1,38 @@
+/* iOS Segment Control Styles */
+
+.ios-segment-control {
+    display: inline-flex;
+    background: var(--ios-gray6);
+    border-radius: var(--ios-radius-sm);
+    padding: 2px;
+    gap: 2px;
+}
+
+.ios-segment-control-item {
+    padding: 6px 16px;
+    border: none;
+    background: transparent;
+    color: var(--ios-text-primary);
+    font-family: var(--font-primary);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    border-radius: var(--ios-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ios-segment-control-item:active {
+    transform: scale(0.97);
+}
+
+.ios-segment-control-item.active {
+    background: white;
+    color: var(--ios-text-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ios-segment-control-item:not(.active):hover {
+    background: rgba(0, 0, 0, 0.05);
+}

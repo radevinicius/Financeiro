@@ -1,0 +1,21 @@
+.file-upload-container {
+    position: relative;
+    width: 100%;
+}
+
+.remove-file {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ios-text-secondary);
+}

@@ -1,0 +1,81 @@
+/* Income Screen Styles */
+
+.income-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.income-item {
+    transition: transform var(--transition-fast);
+}
+
+.income-item:hover {
+    transform: translateX(4px);
+}
+
+.income-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.income-category {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+}
+
+.income-icon {
+    font-size: 32px;
+}
+
+.income-category-name {
+    font-weight: 600;
+    color: var(--ios-text-primary);
+    font-size: var(--text-base);
+}
+
+.income-date {
+    font-size: var(--text-sm);
+    color: var(--ios-text-tertiary);
+    margin-top: 2px;
+}
+
+.income-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.income-value {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--ios-green);
+}
+
+.income-description {
+    margin-top: var(--spacing-sm);
+    font-size: var(--text-sm);
+    color: var(--ios-text-secondary);
+    padding-left: 48px;
+}
+
+.income-badge {
+    display: inline-block;
+    margin-top: var(--spacing-sm);
+    padding: 4px 12px;
+    background: var(--ios-green);
+    color: white;
+    border-radius: 12px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+.income-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}

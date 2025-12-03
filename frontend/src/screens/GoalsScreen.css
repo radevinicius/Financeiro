@@ -1,0 +1,113 @@
+.goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.goals-header h1 {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+}
+
+.goals-loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+}
+
+.goals-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.goal-card {
+    transition: transform var(--transition-fast);
+}
+
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.goal-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.goal-period {
+    font-size: var(--text-sm);
+    color: var(--ios-text-tertiary);
+}
+
+.goal-delete {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.goal-delete:hover {
+    opacity: 1;
+}
+
+.goal-values {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--ios-background-tertiary);
+    border-radius: var(--ios-radius);
+}
+
+.goal-value-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.goal-value-label {
+    font-size: var(--text-sm);
+    color: var(--ios-text-tertiary);
+}
+
+.goal-value-amount {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--ios-text-primary);
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.form-group label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ios-text-secondary);
+}
+
+.ios-select {
+    padding: var(--spacing-md);
+    background: var(--ios-background-secondary);
+    border: 1px solid var(--ios-separator);
+    border-radius: var(--ios-radius);
+    font-size: var(--text-base);
+    color: var(--ios-text-primary);
+    font-family: var(--font-primary);
+}

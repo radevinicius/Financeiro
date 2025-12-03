@@ -1,0 +1,104 @@
+/* iOS Modal Styles */
+
+.ios-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.ios-modal {
+    background: var(--ios-background);
+    border-radius: var(--ios-radius-2xl) var(--ios-radius-2xl) 0 0;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+}
+
+@media (min-width: 768px) {
+    .ios-modal-overlay {
+        align-items: center;
+    }
+
+    .ios-modal {
+        border-radius: var(--ios-radius-2xl);
+        max-height: 85vh;
+    }
+
+    .ios-modal-small {
+        max-width: 400px;
+    }
+
+    .ios-modal-medium {
+        max-width: 600px;
+    }
+
+    .ios-modal-large {
+        max-width: 800px;
+    }
+}
+
+.ios-modal-header {
+    position: relative;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--ios-separator);
+    flex-shrink: 0;
+}
+
+.ios-modal-drag-indicator {
+    width: 36px;
+    height: 5px;
+    background: var(--ios-gray3);
+    border-radius: 3px;
+    margin: 0 auto var(--spacing-sm);
+}
+
+.ios-modal-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    text-align: center;
+    color: var(--ios-text-primary);
+    margin: 0;
+}
+
+.ios-modal-close {
+    position: absolute;
+    top: 50%;
+    right: var(--spacing-md);
+    transform: translateY(-50%);
+    background: var(--ios-gray5);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ios-text-secondary);
+    font-size: var(--text-lg);
+    transition: background-color var(--transition-fast);
+}
+
+.ios-modal-close:hover {
+    background: var(--ios-gray4);
+}
+
+.ios-modal-close:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.ios-modal-content {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+}

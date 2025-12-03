@@ -1,0 +1,26 @@
+/* iOS Card Styles */
+
+.card-padding-none {
+    padding: 0;
+}
+
+.card-padding-small {
+    padding: var(--spacing-sm);
+}
+
+.card-padding-medium {
+    padding: var(--spacing-md);
+}
+
+.card-padding-large {
+    padding: var(--spacing-lg);
+}
+
+.card-clickable {
+    cursor: pointer;
+}
+
+.card-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ios-shadow-lg);
+}

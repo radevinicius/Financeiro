@@ -1,0 +1,28 @@
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--ios-background-secondary);
+    border: none;
+    border-radius: var(--ios-radius);
+    color: var(--ios-text-primary);
+    font-size: var(--text-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    width: 100%;
+}
+
+.theme-toggle:hover {
+    background: var(--ios-background-tertiary);
+}
+
+.theme-toggle:active {
+    transform: scale(0.98);
+}
+
+.theme-icon {
+    font-size: 20px;
+    color: var(--ios-blue);
+}

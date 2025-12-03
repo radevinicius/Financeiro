@@ -1,0 +1,94 @@
+/* iOS Button Styles */
+
+.ios-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--ios-radius);
+    font-family: var(--font-primary);
+    font-size: var(--text-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.ios-button:active {
+    transform: scale(0.96);
+}
+
+/* Primary Button (iOS Blue) */
+.ios-button-primary {
+    background: var(--ios-blue);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+.ios-button-primary:hover:not(:disabled) {
+    background: #0051D5;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
+
+/* Secondary Button */
+.ios-button-secondary {
+    background: var(--ios-gray6);
+    color: var(--ios-blue);
+}
+
+.ios-button-secondary:hover:not(:disabled) {
+    background: var(--ios-gray5);
+}
+
+/* Destructive Button (Red) */
+.ios-button-destructive {
+    background: var(--ios-red);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+.ios-button-destructive:hover:not(:disabled) {
+    background: #D70015;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
+}
+
+/* Sizes */
+.ios-button-small {
+    padding: 8px 16px;
+    font-size: var(--text-sm);
+    border-radius: var(--ios-radius-sm);
+}
+
+.ios-button-medium {
+    padding: 12px 24px;
+    font-size: var(--text-base);
+}
+
+.ios-button-large {
+    padding: 16px 32px;
+    font-size: var(--text-lg);
+    border-radius: var(--ios-radius-lg);
+}
+
+/* Full Width */
+.ios-button-full {
+    width: 100%;
+}
+
+/* Disabled State */
+.ios-button-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.ios-button-icon {
+    display: flex;
+    align-items: center;
+    font-size: 1.2em;
+}
