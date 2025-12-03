@@ -169,21 +169,24 @@ export default function DashboardScreen() {
                 receitasAPI.getAll({ dataInicio, dataFim })
             ]);
 
+            const despesas = despesasRes.data.despesas || [];
+            const receitas = receitasRes.data.receitas || [];
+
             const totalDespesas = despesas.reduce(
-    (sum, d) => sum + Number(d.valor || 0),
-    0
-);
+                (sum, d) => sum + Number(d.valor || 0),
+                0
+            );
 
-const totalReceitas = receitas.reduce(
-    (sum, r) => sum + Number(r.valor || 0),
-    0
-);
+            const totalReceitas = receitas.reduce(
+                (sum, r) => sum + Number(r.valor || 0),
+                0
+            );
 
-setStats({
-    totalReceitas: Number(totalReceitas) || 0,
-    totalDespesas: Number(totalDespesas) || 0,
-    saldo: Number(totalReceitas - totalDespesas) || 0
-});
+            setStats({
+                totalReceitas: Number(totalReceitas) || 0,
+                totalDespesas: Number(totalDespesas) || 0,
+                saldo: Number(totalReceitas - totalDespesas) || 0
+            });
 
             // Agrupar despesas por categoria
             const categoriasDespesas = {};
@@ -192,7 +195,7 @@ setStats({
                 if (!categoriasDespesas[cat]) {
                     categoriasDespesas[cat] = { total: 0, cor: d.categoria_cor || '#FF3B30', icone: d.categoria_icone || '📊' };
                 }
-                categoriasDespesas[cat].total += d.valor;
+                categoriasDespesas[cat].total += Number(d.valor || 0);
             });
 
             setDespesasPorCategoria(Object.entries(categoriasDespesas).map(([nome, data]) => ({
@@ -207,7 +210,7 @@ setStats({
                 if (!categoriasReceitas[cat]) {
                     categoriasReceitas[cat] = { total: 0, cor: r.categoria_cor || '#34C759', icone: r.categoria_icone || '💰' };
                 }
-                categoriasReceitas[cat].total += r.valor;
+                categoriasReceitas[cat].total += Number(r.valor || 0);
             });
 
             setReceitasPorCategoria(Object.entries(categoriasReceitas).map(([nome, data]) => ({
