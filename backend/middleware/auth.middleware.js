@@ -16,7 +16,7 @@ export async function authenticateToken(req, res, next) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Buscar usuário no banco
-        const user = await getOne('SELECT id, nome, email, tipo FROM usuarios WHERE id = ?', [decoded.userId]);
+        const user = await getOne('SELECT id, nome, email, tipo FROM usuarios WHERE id = $1', [decoded.userId]);
 
         if (!user) {
             return res.status(401).json({ error: 'Usuário não encontrado' });
