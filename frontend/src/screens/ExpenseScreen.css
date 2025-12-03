@@ -141,3 +141,22 @@
 .ios-select option {
     padding: 8px;
 }
+/* Edit Button Styles */
+.edit-btn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.6;
+    transition: all var(--transition-fast);
+}
+
+.edit-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.edit-btn:active {
+    transform: scale(0.95);
+}

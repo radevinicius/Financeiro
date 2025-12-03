@@ -13,6 +13,7 @@ export default function ExpenseScreen() {
     const [categorias, setCategorias] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [editingId, setEditingId] = useState(null);
 
     const [formData, setFormData] = useState({
         categoria_id: '',
@@ -44,21 +45,40 @@ export default function ExpenseScreen() {
 
     const [selectedFile, setSelectedFile] = useState(null);
 
+    const handleEdit = (despesa) => {
+        setEditingId(despesa.id);
+        setFormData({
+            categoria_id: despesa.categoria_id,
+            valor: despesa.valor.toString(),
+            data: new Date(despesa.data).toISOString().split('T')[0],
+            descricao: despesa.descricao || ''
+        });
+        setIsModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await despesasAPI.create({
+            const data = {
                 ...formData,
                 valor: parseFloat(formData.valor)
-            });
+            };
 
-            if (selectedFile) {
-                const formData = new FormData();
-                formData.append('arquivo', selectedFile);
-                formData.append('transacao_tipo', 'despesa');
-                formData.append('transacao_id', response.data.despesaId);
+            if (editingId) {
+                // Modo edição
+                await despesasAPI.update(editingId, data);
+            } else {
+                // Modo criação
+                const response = await despesasAPI.create(data);
 
-                await anexosAPI.upload(formData);
+                if (selectedFile) {
+                    const formDataFile = new FormData();
+                    formDataFile.append('arquivo', selectedFile);
+                    formDataFile.append('transacao_tipo', 'despesa');
+                    formDataFile.append('transacao_id', response.data.despesaId);
+
+                    await anexosAPI.upload(formDataFile);
+                }
             }
 
             setFormData({
@@ -68,12 +88,13 @@ export default function ExpenseScreen() {
                 descricao: ''
             });
             setSelectedFile(null);
+            setEditingId(null);
 
             setIsModalOpen(false);
             loadData();
         } catch (error) {
-            console.error('Erro ao criar despesa:', error);
-            alert('Erro ao criar despesa: ' + (error.response?.data?.error || 'Erro desconhecido'));
+            console.error('Erro ao salvar despesa:', error);
+            alert('Erro ao salvar despesa: ' + (error.response?.data?.error || 'Erro desconhecido'));
         }
     };
 
@@ -137,8 +158,16 @@ export default function ExpenseScreen() {
                                 <div className="expense-actions">
                                     <span className="expense-value">-R$ {despesa.valor.toFixed(2)}</span>
                                     <button
+                                        className="edit-btn"
+                                        onClick={() => handleEdit(despesa)}
+                                        title="Editar despesa"
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button
                                         className="delete-btn"
                                         onClick={() => handleDelete(despesa.id)}
+                                        title="Excluir despesa"
                                     >
                                         🗑️
                                     </button>
@@ -157,8 +186,18 @@ export default function ExpenseScreen() {
 
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title="Nova Despesa"
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setEditingId(null);
+                    setFormData({
+                        categoria_id: '',
+                        valor: '',
+                        data: new Date().toISOString().split('T')[0],
+                        descricao: ''
+                    });
+                    setSelectedFile(null);
+                }}
+                title={editingId ? "Editar Despesa" : "Nova Despesa"}
             >
                 <form onSubmit={handleSubmit} className="expense-form">
                     <div className="form-group">
@@ -209,7 +248,7 @@ export default function ExpenseScreen() {
                     </div>
 
                     <Button type="submit" variant="primary" size="large" fullWidth>
-                        Adicionar Despesa
+                        {editingId ? "Atualizar Despesa" : "Adicionar Despesa"}
                     </Button>
                 </form>
             </Modal>

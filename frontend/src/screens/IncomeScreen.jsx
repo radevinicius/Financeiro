@@ -13,6 +13,7 @@ export default function IncomeScreen() {
     const [categorias, setCategorias] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [editingId, setEditingId] = useState(null);
 
     const [formData, setFormData] = useState({
         categoria_id: '',
@@ -44,23 +45,42 @@ export default function IncomeScreen() {
 
     const [selectedFile, setSelectedFile] = useState(null);
 
+    const handleEdit = (receita) => {
+        setEditingId(receita.id);
+        setFormData({
+            categoria_id: receita.categoria_id,
+            valor: receita.valor.toString(),
+            data: new Date(receita.data).toISOString().split('T')[0],
+            descricao: receita.descricao || ''
+        });
+        setIsModalOpen(true);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await receitasAPI.create({
+            const data = {
                 ...formData,
                 valor: parseFloat(formData.valor)
-            });
+            };
 
-            if (selectedFile) {
-                const formData = new FormData();
-                formData.append('arquivo', selectedFile);
-                formData.append('transacao_tipo', 'receita');
-                formData.append('transacao_id', response.data.receitaId);
+            if (editingId) {
+                // Modo edição
+                await receitasAPI.update(editingId, data);
+            } else {
+                // Modo criação
+                const response = await receitasAPI.create(data);
 
-                await axios.post('/api/anexos', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                if (selectedFile) {
+                    const formDataFile = new FormData();
+                    formDataFile.append('arquivo', selectedFile);
+                    formDataFile.append('transacao_tipo', 'receita');
+                    formDataFile.append('transacao_id', response.data.receitaId);
+
+                    await axios.post('/api/anexos', formDataFile, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                }
             }
 
             setFormData({
@@ -70,12 +90,13 @@ export default function IncomeScreen() {
                 descricao: ''
             });
             setSelectedFile(null);
+            setEditingId(null);
 
             setIsModalOpen(false);
             loadData();
         } catch (error) {
-            console.error('Erro ao criar receita:', error);
-            alert('Erro ao criar receita: ' + (error.response?.data?.error || 'Erro desconhecido'));
+            console.error('Erro ao salvar receita:', error);
+            alert('Erro ao salvar receita: ' + (error.response?.data?.error || 'Erro desconhecido'));
         }
     };
 
@@ -139,8 +160,16 @@ export default function IncomeScreen() {
                                 <div className="income-actions">
                                     <span className="income-value">+R$ {receita.valor.toFixed(2)}</span>
                                     <button
+                                        className="edit-btn"
+                                        onClick={() => handleEdit(receita)}
+                                        title="Editar receita"
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button
                                         className="delete-btn"
                                         onClick={() => handleDelete(receita.id)}
+                                        title="Excluir receita"
                                     >
                                         🗑️
                                     </button>
@@ -159,8 +188,18 @@ export default function IncomeScreen() {
 
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title="Nova Receita"
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setEditingId(null);
+                    setFormData({
+                        categoria_id: '',
+                        valor: '',
+                        data: new Date().toISOString().split('T')[0],
+                        descricao: ''
+                    });
+                    setSelectedFile(null);
+                }}
+                title={editingId ? "Editar Receita" : "Nova Receita"}
             >
                 <form onSubmit={handleSubmit} className="income-form">
                     <div className="form-group">
@@ -211,7 +250,7 @@ export default function IncomeScreen() {
                     </div>
 
                     <Button type="submit" variant="primary" size="large" fullWidth>
-                        Adicionar Receita
+                        {editingId ? "Atualizar Receita" : "Adicionar Receita"}
                     </Button>
                 </form>
             </Modal>
