@@ -379,7 +379,7 @@ setStats({
                             <div className="stat-icon">💰</div>
                             <div className="stat-label">Receitas</div>
                             <div className="stat-value green">
-                                R$ {stats.totalReceitas.toFixed(2)}
+                                R$ {Number(stats.totalReceitas || 0).toFixed(2)}
                             </div>
                         </Card>
 
@@ -387,7 +387,7 @@ setStats({
                             <div className="stat-icon">💸</div>
                             <div className="stat-label">Despesas</div>
                             <div className="stat-value red">
-                                R$ {stats.totalDespesas.toFixed(2)}
+                                R$ {Number(stats.totalDespesas || 0).toFixed(2)}
                             </div>
                         </Card>
 
@@ -395,7 +395,7 @@ setStats({
                             <div className="stat-icon">📊</div>
                             <div className="stat-label">Saldo</div>
                             <div className={`stat-value ${stats.saldo >= 0 ? 'green' : 'red'}`}>
-                                R$ {stats.saldo.toFixed(2)}
+                                R$ {Number(stats.saldo || 0).toFixed(2)}
                             </div>
                         </Card>
                     </div>
