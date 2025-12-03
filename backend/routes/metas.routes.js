@@ -14,7 +14,7 @@ router.get('/', authenticateToken, async (req, res) => {
             `SELECT m.*, c.nome as categoria_nome, c.icone as categoria_icone
              FROM metas m
              LEFT JOIN categorias c ON m.categoria_id = c.id
-             WHERE m.usuario_id = $1 AND m.ativo = 1
+             WHERE m.usuario_id = $1 AND m.ativo = true
              ORDER BY m.created_at DESC`,
             [req.user.id]
         );
@@ -142,7 +142,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Meta não encontrada' });
         }
 
-        await run('UPDATE metas SET ativo = 0 WHERE id = $1', [id]);
+        await run('UPDATE metas SET ativo = false WHERE id = $1', [id]);
 
         res.json({ message: 'Meta deletada com sucesso' });
     } catch (error) {

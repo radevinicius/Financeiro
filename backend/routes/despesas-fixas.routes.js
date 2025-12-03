@@ -14,7 +14,7 @@ router.get('/', authenticateToken, async (req, res) => {
             SELECT df.*, c.nome as categoria_nome, c.icone as categoria_icone, c.cor as categoria_cor
             FROM despesas_fixas df
             LEFT JOIN categorias c ON df.categoria_id = c.id
-            WHERE df.usuario_id = $1 AND df.ativo = 1
+            WHERE df.usuario_id = $1 AND df.ativo = true
             ORDER BY df.dia_vencimento ASC, df.nome ASC
         `;
 
@@ -34,7 +34,7 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/total', authenticateToken, async (req, res) => {
     try {
         const result = await getOne(
-            'SELECT COALESCE(SUM(valor), 0) as total FROM despesas_fixas WHERE usuario_id = $1 AND ativo = 1',
+            'SELECT COALESCE(SUM(valor), 0) as total FROM despesas_fixas WHERE usuario_id = $1 AND ativo = true',
             [req.user.id]
         );
 
@@ -181,7 +181,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         }
 
         // Soft delete
-        await run('UPDATE despesas_fixas SET ativo = 0 WHERE id = $1', [id]);
+        await run('UPDATE despesas_fixas SET ativo = false WHERE id = $1', [id]);
 
         res.json({ message: 'Despesa fixa deletada com sucesso' });
     } catch (error) {
