@@ -61,9 +61,10 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/progresso', authenticateToken, async (req, res) => {
     try {
         const metas = await query(
-            'SELECT * FROM metas WHERE usuario_id = $1 AND ativo = 1',
+            'SELECT * FROM metas WHERE usuario_id = $1 AND ativo = true',
             [req.user.id]
         );
+
 
         const hoje = new Date();
         const mes = hoje.getMonth() + 1;
