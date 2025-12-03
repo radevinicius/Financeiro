@@ -444,7 +444,7 @@ setStats({
                                         </div>
                                         <div className="transaction-right">
                                             <div className={`transaction-value ${transaction.tipo === 'receita' ? 'green' : 'red'}`}>
-                                                {transaction.tipo === 'receita' ? '+' : '-'} R$ {transaction.valor.toFixed(2)}
+                                                {transaction.tipo === 'receita' ? '+' : '-'} R$ {Number(transaction.valor || 0).toFixed(2)}
                                             </div>
                                             <div className="transaction-date">
                                                 {new Date(transaction.data).toLocaleDateString('pt-BR', {
