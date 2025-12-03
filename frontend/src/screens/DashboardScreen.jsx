@@ -169,17 +169,21 @@ export default function DashboardScreen() {
                 receitasAPI.getAll({ dataInicio, dataFim })
             ]);
 
-            const despesas = despesasRes.data.despesas || [];
-            const receitas = receitasRes.data.receitas || [];
+            const totalDespesas = despesas.reduce(
+    (sum, d) => sum + Number(d.valor || 0),
+    0
+);
 
-            const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
-            const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
+const totalReceitas = receitas.reduce(
+    (sum, r) => sum + Number(r.valor || 0),
+    0
+);
 
-            setStats({
-                totalReceitas,
-                totalDespesas,
-                saldo: totalReceitas - totalDespesas
-            });
+setStats({
+    totalReceitas: Number(totalReceitas) || 0,
+    totalDespesas: Number(totalDespesas) || 0,
+    saldo: Number(totalReceitas - totalDespesas) || 0
+});
 
             // Agrupar despesas por categoria
             const categoriasDespesas = {};
