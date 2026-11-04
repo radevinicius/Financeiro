@@ -124,8 +124,11 @@ export default function FixedExpensesScreen() {
             ) : (
                 <>
                     <Card glass padding="large" className="total-card">
-                        <div className="total-label">Total Mensal</div>
-                        <div className="total-value">R$ {total.toFixed(2)}</div>
+                        <div className="total-label">Total Mensal Recorrente</div>
+                        <div className="total-value">R$ {Number(total || 0).toFixed(2)}</div>
+                        <div className="total-subtitle">
+                            🔄 Todas as despesas fixas são lançadas automaticamente todo mês nas suas Despesas
+                        </div>
                     </Card>
 
                     {despesasFixas.length === 0 ? (
@@ -159,15 +162,20 @@ export default function FixedExpensesScreen() {
                                             {despesa.descricao && (
                                                 <div className="expense-description">{despesa.descricao}</div>
                                             )}
-                                            {despesa.dia_vencimento && (
-                                                <div className="expense-due">
-                                                    📅 Vence dia {despesa.dia_vencimento}
-                                                </div>
-                                            )}
+                                            <div className="fixed-expense-meta">
+                                                {despesa.dia_vencimento && (
+                                                    <span className="expense-due">
+                                                        📅 Vence dia {despesa.dia_vencimento}
+                                                    </span>
+                                                )}
+                                                <span className="auto-launch-badge">
+                                                    ✅ Lançada todo mês
+                                                </span>
+                                            </div>
                                         </div>
                                         <div className="expense-actions">
                                             <div className="expense-value">
-                                                R$ {despesa.valor.toFixed(2)}
+                                                R$ {Number(despesa.valor || 0).toFixed(2)}
                                             </div>
                                             <div className="action-buttons">
                                                 <button

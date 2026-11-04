@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.middleware.js';
-import { query, getOne, run } from '../database/database.js';
+import { query, getOne, run, syncFixedExpensesForRange } from '../database/database.js';
 
 const router = express.Router();
 
@@ -10,6 +10,9 @@ const router = express.Router();
  */
 router.get('/', authenticateToken, async (req, res) => {
     try {
+        // Garantir que as despesas fixas do mês atual já estejam lançadas
+        await syncFixedExpensesForRange(req.user.id);
+
         const sql = `
             SELECT df.*, c.nome as categoria_nome, c.icone as categoria_icone, c.cor as categoria_cor
             FROM despesas_fixas df
@@ -49,7 +52,7 @@ router.get('/total', authenticateToken, async (req, res) => {
 
 /**
  * POST /api/despesas-fixas
- * Criar nova despesa fixa
+ * Criar nova despesa fixa e já lançar automaticamente no mês atual
  */
 router.post('/', authenticateToken, async (req, res) => {
     try {
@@ -82,8 +85,11 @@ router.post('/', authenticateToken, async (req, res) => {
             [req.user.id, nome, valor, dia_vencimento || null, categoria_id || null, descricao || null]
         );
 
+        // Lançar automaticamente na tabela de despesas para o mês atual
+        await syncFixedExpensesForRange(req.user.id);
+
         res.status(201).json({
-            message: 'Despesa fixa criada com sucesso',
+            message: 'Despesa fixa criada e lançada no mês atual com sucesso',
             despesaFixaId: result.lastInsertRowid
         });
     } catch (error) {
@@ -103,7 +109,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
         // Verificar se despesa fixa pertence ao usuário
         const despesaFixa = await getOne(
-            'SELECT usuario_id FROM despesas_fixas WHERE id = $1',
+            'SELECT * FROM despesas_fixas WHERE id = $1',
             [id]
         );
 
@@ -152,6 +158,35 @@ router.put('/:id', authenticateToken, async (req, res) => {
         values.push(id);
 
         await run(`UPDATE despesas_fixas SET ${updates.join(', ')} WHERE id = $${paramIndex}`, values);
+
+        // Atualizar também o lançamento automático do mês atual se existir
+        const today = new Date();
+        const competenciaAtual = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        const novoNome = nome !== undefined ? nome : despesaFixa.nome;
+        const novaDesc = descricao !== undefined ? descricao : despesaFixa.descricao;
+        const novoValor = valor !== undefined ? valor : despesaFixa.valor;
+        const novaCat = categoria_id !== undefined ? categoria_id : despesaFixa.categoria_id;
+        const novoDia = dia_vencimento !== undefined ? dia_vencimento : despesaFixa.dia_vencimento;
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        const day = Math.min(Math.max(1, parseInt(novoDia) || 1), lastDay);
+        const novaData = `${competenciaAtual}-${String(day).padStart(2, '0')}`;
+
+        await run(
+            `UPDATE despesas
+             SET valor = $1,
+                 descricao = $2,
+                 data = $3,
+                 categoria_id = COALESCE($4, categoria_id)
+             WHERE despesa_fixa_id = $5 AND competencia = $6`,
+            [
+                novoValor,
+                novaDesc ? `${novoNome} - ${novaDesc}` : novoNome,
+                novaData,
+                novaCat || null,
+                id,
+                competenciaAtual
+            ]
+        );
 
         res.json({ message: 'Despesa fixa atualizada com sucesso' });
     } catch (error) {

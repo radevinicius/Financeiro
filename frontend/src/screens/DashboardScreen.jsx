@@ -31,6 +31,7 @@ ChartJS.register(
 
 export default function DashboardScreen() {
     const [period, setPeriod] = useState('month');
+    const [monthOffset, setMonthOffset] = useState(0);
     const [customDates, setCustomDates] = useState({
         dataInicio: '',
         dataFim: ''
@@ -59,13 +60,20 @@ export default function DashboardScreen() {
             loadDashboard();
             loadEvolution();
         }
-    }, [period, customDates]);
+    }, [period, monthOffset, customDates]);
 
     const formatLocalDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    };
+
+    const getSelectedMonthLabel = () => {
+        const today = new Date();
+        const target = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+        const label = target.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        return label.charAt(0).toUpperCase() + label.slice(1);
     };
 
     const getDateRange = () => {
@@ -91,8 +99,8 @@ export default function DashboardScreen() {
                 break;
             }
             case 'month': {
-                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                const monthStart = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+                const monthEnd = new Date(today.getFullYear(), today.getMonth() + monthOffset + 1, 0);
                 dataInicio = formatLocalDate(monthStart);
                 dataFim = formatLocalDate(monthEnd);
                 break;
@@ -359,6 +367,39 @@ export default function DashboardScreen() {
                         selected={period}
                         onChange={setPeriod}
                     />
+
+                    {period === 'month' && (
+                        <div className="month-navigator">
+                            <button
+                                type="button"
+                                className="month-nav-btn"
+                                onClick={() => setMonthOffset(prev => prev - 1)}
+                                title="Mês anterior"
+                            >
+                                ◀
+                            </button>
+                            <div className="month-nav-center">
+                                <span className="month-nav-label">{getSelectedMonthLabel()}</span>
+                                {monthOffset !== 0 && (
+                                    <button
+                                        type="button"
+                                        className="month-reset-btn"
+                                        onClick={() => setMonthOffset(0)}
+                                    >
+                                        Mês atual
+                                    </button>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                className="month-nav-btn"
+                                onClick={() => setMonthOffset(prev => prev + 1)}
+                                title="Próximo mês"
+                            >
+                                ▶
+                            </button>
+                        </div>
+                    )}
 
                     {period === 'custom' && (
                         <div className="custom-date-range">

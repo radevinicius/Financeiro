@@ -32,6 +32,12 @@
     background-clip: text;
 }
 
+.total-subtitle {
+    margin-top: var(--spacing-xs);
+    font-size: var(--text-xs);
+    color: var(--ios-text-tertiary);
+}
+
 .fixed-expenses-list {
     display: flex;
     flex-direction: column;
@@ -81,12 +87,28 @@
 .expense-description {
     font-size: var(--text-sm);
     color: var(--ios-text-secondary);
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+}
+
+.fixed-expense-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .expense-due {
     font-size: var(--text-xs);
     color: var(--ios-text-tertiary);
+}
+
+.auto-launch-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ios-green);
+    background: rgba(52, 199, 89, 0.12);
+    padding: 2px 8px;
+    border-radius: 10px;
 }
 
 .expense-actions {

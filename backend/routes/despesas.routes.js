@@ -1,16 +1,20 @@
 import express from 'express';
-import { authenticateToken, requireAdmin } from '../middleware/auth.middleware.js';
-import { query, getOne, run } from '../database/database.js';
+import { authenticateToken } from '../middleware/auth.middleware.js';
+import { query, getOne, run, syncFixedExpensesForRange } from '../database/database.js';
 
 const router = express.Router();
 
 /**
  * GET /api/despesas
- * Listar despesas (com filtros)
+ * Listar despesas (com filtros e sincronização automática de despesas fixas do período)
  */
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { dataInicio, dataFim, categoriaId, usuarioId } = req.query;
+
+        // Sincronizar despesas fixas automaticamente para o usuário no período consultado
+        const targetUserId = req.user.tipo === 'admin' && usuarioId ? parseInt(usuarioId) : req.user.id;
+        await syncFixedExpensesForRange(targetUserId, dataInicio, dataFim);
 
         let sql = `
       SELECT d.*, c.nome as categoria_nome, c.icone as categoria_icone, c.cor as categoria_cor,
@@ -100,7 +104,7 @@ router.post('/', authenticateToken, async (req, res) => {
     try {
         const { categoria_id, valor, data, descricao, origem } = req.body;
 
-        //  Validações
+        // Validações
         if (!categoria_id || !valor || !data) {
             return res.status(400).json({ error: 'Categoria, valor e data são obrigatórios' });
         }

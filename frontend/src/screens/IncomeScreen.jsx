@@ -10,6 +10,8 @@ import './IncomeScreen.css';
 
 export default function IncomeScreen() {
     const [period, setPeriod] = useState('month');
+    const [monthOffset, setMonthOffset] = useState(0);
+    const [selectedCategory, setSelectedCategory] = useState('all');
     const [customDates, setCustomDates] = useState({
         dataInicio: '',
         dataFim: ''
@@ -42,6 +44,13 @@ export default function IncomeScreen() {
         return `${year}-${month}-${day}`;
     };
 
+    const getSelectedMonthLabel = () => {
+        const today = new Date();
+        const target = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+        const label = target.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    };
+
     const getDateRange = () => {
         if (period === 'custom') {
             return {
@@ -65,8 +74,8 @@ export default function IncomeScreen() {
                 break;
             }
             case 'month': {
-                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                const monthStart = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+                const monthEnd = new Date(today.getFullYear(), today.getMonth() + monthOffset + 1, 0);
                 dataInicio = formatLocalDate(monthStart);
                 dataFim = formatLocalDate(monthEnd);
                 break;
@@ -89,7 +98,7 @@ export default function IncomeScreen() {
         if (period !== 'custom' || (customDates.dataInicio && customDates.dataFim)) {
             loadData();
         }
-    }, [period, customDates]);
+    }, [period, monthOffset, customDates]);
 
     const loadData = async () => {
         try {
@@ -188,6 +197,12 @@ export default function IncomeScreen() {
         return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     };
 
+    const filteredReceitas = selectedCategory === 'all'
+        ? receitas
+        : receitas.filter(r => String(r.categoria_id) === String(selectedCategory));
+
+    const totalPeriodo = filteredReceitas.reduce((sum, r) => sum + Number(r.valor || 0), 0);
+
     return (
         <div className="page fade-in">
             <div className="screen-header">
@@ -210,6 +225,39 @@ export default function IncomeScreen() {
                         onChange={setPeriod}
                     />
 
+                    {period === 'month' && (
+                        <div className="month-navigator">
+                            <button
+                                type="button"
+                                className="month-nav-btn"
+                                onClick={() => setMonthOffset(prev => prev - 1)}
+                                title="Mês anterior"
+                            >
+                                ◀
+                            </button>
+                            <div className="month-nav-center">
+                                <span className="month-nav-label">{getSelectedMonthLabel()}</span>
+                                {monthOffset !== 0 && (
+                                    <button
+                                        type="button"
+                                        className="month-reset-btn"
+                                        onClick={() => setMonthOffset(0)}
+                                    >
+                                        Mês atual
+                                    </button>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                className="month-nav-btn"
+                                onClick={() => setMonthOffset(prev => prev + 1)}
+                                title="Próximo mês"
+                            >
+                                ▶
+                            </button>
+                        </div>
+                    )}
+
                     {period === 'custom' && (
                         <div className="custom-date-range">
                             <Input
@@ -227,23 +275,57 @@ export default function IncomeScreen() {
                         </div>
                     )}
                 </div>
+
+                {categorias.length > 0 && (
+                    <div className="category-chips">
+                        <button
+                            type="button"
+                            className={`category-chip ${selectedCategory === 'all' ? 'active' : ''}`}
+                            onClick={() => setSelectedCategory('all')}
+                        >
+                            Todas
+                        </button>
+                        {categorias.map(cat => (
+                            <button
+                                key={cat.id}
+                                type="button"
+                                className={`category-chip ${String(selectedCategory) === String(cat.id) ? 'active' : ''}`}
+                                onClick={() => setSelectedCategory(cat.id)}
+                            >
+                                <span>{cat.icone}</span> {cat.nome}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                <Card glass padding="medium" className="period-summary-card">
+                    <div>
+                        <div className="period-summary-label">Total no período</div>
+                        <div className="period-summary-count">
+                            {filteredReceitas.length} {filteredReceitas.length === 1 ? 'lançamento' : 'lançamentos'}
+                        </div>
+                    </div>
+                    <div className="period-summary-value income">
+                        +R$ {totalPeriodo.toFixed(2)}
+                    </div>
+                </Card>
             </div>
 
             {loading ? (
                 <div className="loading-container">
                     <div className="ios-spinner"></div>
                 </div>
-            ) : receitas.length === 0 ? (
+            ) : filteredReceitas.length === 0 ? (
                 <Card padding="large" className="empty-state">
                     <div className="empty-icon">💰</div>
-                    <h3>Nenhuma receita registrada</h3>
+                    <h3>Nenhuma receita encontrada</h3>
                     <p className="text-secondary">
-                        Adicione sua primeira receita clicando no botão acima
+                        Não há receitas registradas para os filtros selecionados
                     </p>
                 </Card>
             ) : (
                 <div className="income-list">
-                    {receitas.map((receita) => (
+                    {filteredReceitas.map((receita) => (
                         <Card key={receita.id} padding="medium" className="income-item">
                             <div className="income-item-header">
                                 <div className="income-category">

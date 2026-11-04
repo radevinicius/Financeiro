@@ -106,6 +106,10 @@ CREATE TABLE IF NOT EXISTS despesas_fixas (
     FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL
 );
 
+-- Colunas adicionais para vínculo de lançamento automático mensal das despesas fixas
+ALTER TABLE despesas ADD COLUMN IF NOT EXISTS despesa_fixa_id INTEGER REFERENCES despesas_fixas(id) ON DELETE SET NULL;
+ALTER TABLE despesas ADD COLUMN IF NOT EXISTS competencia TEXT;
+
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_despesas_usuario ON despesas(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_despesas_data ON despesas(data);
@@ -115,7 +119,6 @@ CREATE INDEX IF NOT EXISTS idx_categorias_usuario ON categorias(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_metas_usuario ON metas(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_anexos_transacao ON anexos(transacao_tipo, transacao_id);
 CREATE INDEX IF NOT EXISTS idx_despesas_fixas_usuario ON despesas_fixas(usuario_id);
-
--- Categorias padrão para novos usuários (serão inseridas via código)
--- Despesas: Alimentação, Transporte, Moradia, Saúde, Lazer, Outros
--- Receitas: Salário, Freelance, Investimentos, Outros
+CREATE UNIQUE INDEX IF NOT EXISTS idx_despesas_fixa_competencia
+    ON despesas (usuario_id, despesa_fixa_id, competencia)
+    WHERE despesa_fixa_id IS NOT NULL AND competencia IS NOT NULL;

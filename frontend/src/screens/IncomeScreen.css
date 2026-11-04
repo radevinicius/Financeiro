@@ -25,6 +25,124 @@
     gap: var(--spacing-md);
 }
 
+.month-navigator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--ios-background-secondary);
+    border-radius: var(--ios-radius);
+    padding: 8px 12px;
+    box-shadow: var(--ios-shadow-sm);
+    gap: var(--spacing-md);
+}
+
+.month-nav-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.month-nav-label {
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--ios-text-primary);
+}
+
+.month-nav-btn {
+    border: none;
+    background: var(--ios-gray6);
+    color: var(--ios-blue);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.month-nav-btn:hover {
+    background: var(--ios-gray5);
+}
+
+.month-nav-btn:active {
+    transform: scale(0.92);
+}
+
+.month-reset-btn {
+    border: none;
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--ios-blue);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.category-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+
+.category-chips::-webkit-scrollbar {
+    display: none;
+}
+
+.category-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--ios-gray4);
+    background: var(--ios-background-secondary);
+    color: var(--ios-text-primary);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.category-chip.active {
+    background: var(--ios-green);
+    color: white;
+    border-color: var(--ios-green);
+}
+
+.period-summary-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.period-summary-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ios-text-secondary);
+}
+
+.period-summary-count {
+    font-size: var(--text-xs);
+    color: var(--ios-text-tertiary);
+    margin-top: 2px;
+}
+
+.period-summary-value {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+}
+
+.period-summary-value.income {
+    color: var(--ios-green);
+}
+
 .custom-date-range {
     display: grid;
     grid-template-columns: 1fr 1fr;

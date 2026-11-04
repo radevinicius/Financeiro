@@ -172,6 +172,90 @@ export async function getOne(sql, params = []) {
 }
 
 /**
+ * Sincroniza automaticamente as Despesas Fixas ativas do usuário para os meses do período consultado
+ */
+export async function syncFixedExpensesForRange(userId, dataInicio, dataFim) {
+  if (!userId) return;
+
+  try {
+    const fixas = await query(
+      'SELECT * FROM despesas_fixas WHERE usuario_id = $1 AND ativo = true',
+      [userId]
+    );
+
+    if (!fixas || fixas.length === 0) return;
+
+    // Determinar meses a sincronizar (padrão: mês atual se não informado)
+    const today = new Date();
+    const start = dataInicio ? new Date(`${String(dataInicio).split('T')[0]}T12:00:00Z`) : new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1, 12));
+    const end = dataFim ? new Date(`${String(dataFim).split('T')[0]}T12:00:00Z`) : new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1, 12));
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return;
+
+    const months = [];
+    let curYear = start.getUTCFullYear();
+    let curMonth = start.getUTCMonth() + 1;
+    const endYear = end.getUTCFullYear();
+    const endMonth = end.getUTCMonth() + 1;
+
+    while ((curYear < endYear || (curYear === endYear && curMonth <= endMonth)) && months.length < 13) {
+      months.push({ year: curYear, month: curMonth });
+      curMonth++;
+      if (curMonth > 12) {
+        curMonth = 1;
+        curYear++;
+      }
+    }
+
+    // Buscar categoria padrão ("Outros" ou primeira categoria de despesa do usuário) caso alguma despesa fixa esteja sem categoria
+    let fallbackCategoryId = null;
+    const needsFallback = fixas.some(f => !f.categoria_id);
+    if (needsFallback) {
+      const catOutros = await getOne(
+        `SELECT id FROM categorias WHERE usuario_id = $1 AND tipo = 'despesa' ORDER BY CASE WHEN LOWER(nome) = 'outros' THEN 0 ELSE 1 END, id ASC LIMIT 1`,
+        [userId]
+      );
+      fallbackCategoryId = catOutros?.id || null;
+    }
+
+    for (const { year, month } of months) {
+      const competencia = `${year}-${String(month).padStart(2, '0')}`;
+      const lastDayOfMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+      for (const fixa of fixas) {
+        // Não lançar retroativamente em meses anteriores à criação da despesa fixa
+        if (fixa.created_at) {
+          const createdDate = new Date(fixa.created_at);
+          const createdYear = createdDate.getUTCFullYear();
+          const createdMonth = createdDate.getUTCMonth() + 1;
+          if (year < createdYear || (year === createdYear && month < createdMonth)) {
+            continue;
+          }
+        }
+
+        const catId = fixa.categoria_id || fallbackCategoryId;
+        if (!catId) continue;
+
+        const day = Math.min(Math.max(1, parseInt(fixa.dia_vencimento) || 1), lastDayOfMonth);
+        const dataLancamento = `${competencia}-${String(day).padStart(2, '0')}`;
+        const descricaoLancamento = fixa.descricao ? `${fixa.nome} - ${fixa.descricao}` : fixa.nome;
+
+        await pool.query(
+          `INSERT INTO despesas (usuario_id, categoria_id, valor, data, descricao, origem, despesa_fixa_id, competencia)
+           VALUES ($1, $2, $3, $4, $5, 'manual', $6, $7)
+           ON CONFLICT (usuario_id, despesa_fixa_id, competencia)
+           WHERE despesa_fixa_id IS NOT NULL AND competencia IS NOT NULL
+           DO NOTHING`,
+          [userId, catId, fixa.valor, dataLancamento, descricaoLancamento, fixa.id, competencia]
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Aviso ao sincronizar despesas fixas:', error.message);
+  }
+}
+
+/**
  * Encerra o pool de conexões (útil para testes e shutdown graceful)
  */
 export async function closePool() {
