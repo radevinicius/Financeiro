@@ -2,14 +2,46 @@
 
 .screen-header {
     display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.screen-header-top {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-lg);
+    width: 100%;
 }
 
 .screen-header h1 {
     font-size: var(--text-3xl);
     font-weight: 700;
+}
+
+.period-filter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.custom-date-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .loading-container {
@@ -141,6 +173,7 @@
 .ios-select option {
     padding: 8px;
 }
+
 /* Edit Button Styles */
 .edit-btn {
     background: transparent;

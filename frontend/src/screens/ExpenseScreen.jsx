@@ -4,16 +4,29 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
 import Card from '../components/Card';
+import SegmentControl from '../components/SegmentControl';
 import FileUpload from '../components/FileUpload';
-import axios from 'axios';
 import './ExpenseScreen.css';
 
 export default function ExpenseScreen() {
+    const [period, setPeriod] = useState('month');
+    const [customDates, setCustomDates] = useState({
+        dataInicio: '',
+        dataFim: ''
+    });
     const [despesas, setDespesas] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState(null);
+
+    const periodOptions = [
+        { value: 'today', label: 'Hoje' },
+        { value: 'week', label: 'Semana' },
+        { value: 'month', label: 'Mês' },
+        { value: 'year', label: 'Ano' },
+        { value: 'custom', label: 'Personalizado' }
+    ];
 
     const [formData, setFormData] = useState({
         categoria_id: '',
@@ -22,15 +35,74 @@ export default function ExpenseScreen() {
         descricao: ''
     });
 
+    const formatLocalDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const getDateRange = () => {
+        if (period === 'custom') {
+            return {
+                dataInicio: customDates.dataInicio,
+                dataFim: customDates.dataFim
+            };
+        }
+
+        const today = new Date();
+        let dataInicio, dataFim;
+
+        switch (period) {
+            case 'today':
+                dataInicio = dataFim = formatLocalDate(today);
+                break;
+            case 'week': {
+                const weekAgo = new Date(today);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                dataInicio = formatLocalDate(weekAgo);
+                dataFim = formatLocalDate(today);
+                break;
+            }
+            case 'month': {
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                dataInicio = formatLocalDate(monthStart);
+                dataFim = formatLocalDate(monthEnd);
+                break;
+            }
+            case 'year': {
+                const yearStart = new Date(today.getFullYear(), 0, 1);
+                const yearEnd = new Date(today.getFullYear(), 11, 31);
+                dataInicio = formatLocalDate(yearStart);
+                dataFim = formatLocalDate(yearEnd);
+                break;
+            }
+            default:
+                dataInicio = dataFim = formatLocalDate(today);
+        }
+
+        return { dataInicio, dataFim };
+    };
+
     useEffect(() => {
-        loadData();
-    }, []);
+        if (period !== 'custom' || (customDates.dataInicio && customDates.dataFim)) {
+            loadData();
+        }
+    }, [period, customDates]);
 
     const loadData = async () => {
         try {
             setLoading(true);
+            const { dataInicio, dataFim } = getDateRange();
+
+            if (!dataInicio || !dataFim) {
+                setLoading(false);
+                return;
+            }
+
             const [despesasRes, categoriasRes] = await Promise.all([
-                despesasAPI.getAll(),
+                despesasAPI.getAll({ dataInicio, dataFim }),
                 categoriasAPI.getAll('despesa')
             ]);
 
@@ -120,15 +192,42 @@ export default function ExpenseScreen() {
     return (
         <div className="page fade-in">
             <div className="screen-header">
-                <h1>💸 Despesas</h1>
-                <Button
-                    variant="primary"
-                    size="medium"
-                    onClick={() => setIsModalOpen(true)}
-                    icon="+"
-                >
-                    Adicionar
-                </Button>
+                <div className="screen-header-top">
+                    <h1>💸 Despesas</h1>
+                    <Button
+                        variant="primary"
+                        size="medium"
+                        onClick={() => setIsModalOpen(true)}
+                        icon="+"
+                    >
+                        Adicionar
+                    </Button>
+                </div>
+
+                <div className="period-filter">
+                    <SegmentControl
+                        options={periodOptions}
+                        selected={period}
+                        onChange={setPeriod}
+                    />
+
+                    {period === 'custom' && (
+                        <div className="custom-date-range">
+                            <Input
+                                type="date"
+                                label="Data Início"
+                                value={customDates.dataInicio}
+                                onChange={(e) => setCustomDates({ ...customDates, dataInicio: e.target.value })}
+                            />
+                            <Input
+                                type="date"
+                                label="Data Fim"
+                                value={customDates.dataFim}
+                                onChange={(e) => setCustomDates({ ...customDates, dataFim: e.target.value })}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
             {loading ? (
@@ -156,7 +255,7 @@ export default function ExpenseScreen() {
                                     </div>
                                 </div>
                                 <div className="expense-actions">
-                                    <span className="expense-value">-R$ {despesa.valor.toFixed(2)}</span>
+                                    <span className="expense-value">-R$ {Number(despesa.valor || 0).toFixed(2)}</span>
                                     <button
                                         className="edit-btn"
                                         onClick={() => handleEdit(despesa)}

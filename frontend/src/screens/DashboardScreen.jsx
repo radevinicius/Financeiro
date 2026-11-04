@@ -13,7 +13,6 @@ import {
     Legend
 } from 'chart.js';
 import { despesasAPI, receitasAPI, metasAPI, relatoriosAPI } from '../services/api';
-import axios from 'axios';
 import Card from '../components/Card';
 import SegmentControl from '../components/SegmentControl';
 import Input from '../components/Input';
@@ -62,6 +61,13 @@ export default function DashboardScreen() {
         }
     }, [period, customDates]);
 
+    const formatLocalDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const getDateRange = () => {
         if (period === 'custom') {
             return {
@@ -75,26 +81,31 @@ export default function DashboardScreen() {
 
         switch (period) {
             case 'today':
-                dataInicio = dataFim = today.toISOString().split('T')[0];
+                dataInicio = dataFim = formatLocalDate(today);
                 break;
-            case 'week':
+            case 'week': {
                 const weekAgo = new Date(today);
                 weekAgo.setDate(weekAgo.getDate() - 7);
-                dataInicio = weekAgo.toISOString().split('T')[0];
-                dataFim = today.toISOString().split('T')[0];
+                dataInicio = formatLocalDate(weekAgo);
+                dataFim = formatLocalDate(today);
                 break;
-            case 'month':
+            }
+            case 'month': {
                 const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                dataInicio = monthStart.toISOString().split('T')[0];
-                dataFim = today.toISOString().split('T')[0];
+                const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                dataInicio = formatLocalDate(monthStart);
+                dataFim = formatLocalDate(monthEnd);
                 break;
-            case 'year':
+            }
+            case 'year': {
                 const yearStart = new Date(today.getFullYear(), 0, 1);
-                dataInicio = yearStart.toISOString().split('T')[0];
-                dataFim = today.toISOString().split('T')[0];
+                const yearEnd = new Date(today.getFullYear(), 11, 31);
+                dataInicio = formatLocalDate(yearStart);
+                dataFim = formatLocalDate(yearEnd);
                 break;
+            }
             default:
-                dataInicio = dataFim = today.toISOString().split('T')[0];
+                dataInicio = dataFim = formatLocalDate(today);
         }
 
         return { dataInicio, dataFim };
@@ -250,7 +261,7 @@ export default function DashboardScreen() {
 
     const loadEvolution = async () => {
         try {
-            const response = await axios.get('/api/relatorios/evolucao?meses=6');
+            const response = await relatoriosAPI.getEvolucao(6);
             setEvolutionData(response.data.dados || []);
         } catch (error) {
             console.error('Erro ao carregar evolução:', error);
