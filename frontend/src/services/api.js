@@ -1,8 +1,12 @@
 import axios from 'axios';
 
+// Garantir que a baseURL sempre termine com /api mesmo se VITE_API_URL estiver sem /api na Vercel
+const rawBaseUrl = (import.meta.env.VITE_API_URL || 'https://financeiro-k3z7.onrender.com/api').replace(/\/+$/, '');
+const baseURL = rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`;
+
 // Criar instância do axios
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'https://financeiro-k3z7.onrender.com/api',
+    baseURL,
     headers: {
         'Content-Type': 'application/json'
     }
