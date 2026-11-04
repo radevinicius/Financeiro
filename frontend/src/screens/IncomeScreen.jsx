@@ -122,7 +122,7 @@ export default function IncomeScreen() {
         setFormData({
             categoria_id: receita.categoria_id,
             valor: receita.valor.toString(),
-            data: new Date(receita.data).toISOString().split('T')[0],
+            data: String(receita.data).split('T')[0],
             descricao: receita.descricao || ''
         });
         setIsModalOpen(true);
@@ -183,10 +183,9 @@ export default function IncomeScreen() {
 
     const formatDate = (dateString) => {
         if (!dateString) return 'Data inválida';
-        // PostgreSQL retorna TIMESTAMP, então precisamos parsear corretamente
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return 'Data inválida';
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     };
 
     return (

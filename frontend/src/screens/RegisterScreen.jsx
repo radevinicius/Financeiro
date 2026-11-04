@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -133,7 +133,7 @@ export default function RegisterScreen() {
                 <div className="register-footer">
                     <p className="text-secondary text-sm">
                         Já tem uma conta?{' '}
-                        <a href="/login" className="register-link">Faça login</a>
+                        <Link to="/login" className="register-link">Faça login</Link>
                     </p>
                 </div>
             </div>

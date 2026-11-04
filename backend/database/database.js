@@ -3,7 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { Pool } = pg;
+const { Pool, types } = pg;
+
+// Converter NUMERIC/DECIMAL (OID 1700) automaticamente para float
+types.setTypeParser(1700, (val) => (val === null ? null : parseFloat(val)));
 
 // Configuração do pool de conexões PostgreSQL
 const pool = new Pool({
@@ -17,8 +20,7 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Erro inesperado no PostgreSQL:', err);
-  process.exit(-1);
+  console.error('❌ Erro inesperado no cliente ocioso do PostgreSQL:', err);
 });
 
 /**
@@ -87,9 +89,18 @@ export async function createDefaultCategories(userId) {
   console.log(`✅ Categorias padrão criadas para usuário ${userId}`);
 }
 
+const NUMERIC_COLUMNS = new Set([
+  'valor',
+  'valor_meta',
+  'total',
+  'tamanho',
+  'despesas_count',
+  'receitas_count'
+]);
+
 /**
- * Helper para converter valores numéricos do PostgreSQL
- * PostgreSQL retorna DECIMAL/NUMERIC como strings, precisamos converter para números
+ * Helper para converter apenas colunas numéricas conhecidas do PostgreSQL
+ * Evita converter descrições, telefones ou textos que contenham apenas dígitos
  */
 function convertNumericValues(rows) {
   if (!rows || rows.length === 0) return rows;
@@ -97,10 +108,9 @@ function convertNumericValues(rows) {
   return rows.map(row => {
     const converted = { ...row };
     for (const key in converted) {
+      if (!NUMERIC_COLUMNS.has(key)) continue;
       const value = converted[key];
-      // Converter strings numéricas para números
       if (typeof value === 'string' && !isNaN(value) && value.trim() !== '') {
-        // Verificar se é um número válido
         const num = parseFloat(value);
         if (!isNaN(num)) {
           converted[key] = num;
@@ -117,7 +127,6 @@ function convertNumericValues(rows) {
 export async function query(sql, params = []) {
   try {
     const result = await pool.query(sql, params);
-    // Converter valores numéricos automáticamente
     return convertNumericValues(result.rows);
   } catch (error) {
     console.error('Erro ao executar query:', error);
@@ -153,7 +162,6 @@ export async function getOne(sql, params = []) {
     const result = await pool.query(sql, params);
     const row = result.rows[0] || null;
     if (row) {
-      // Converter valores numéricos
       return convertNumericValues([row])[0];
     }
     return null;

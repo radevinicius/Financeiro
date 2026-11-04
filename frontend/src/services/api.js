@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Criar instância do axios
 const api = axios.create({
-    baseURL: 'https://financeiro-k3z7.onrender.com/api',
+    baseURL: import.meta.env.VITE_API_URL || 'https://financeiro-k3z7.onrender.com/api',
     headers: {
         'Content-Type': 'application/json'
     }

@@ -61,10 +61,12 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/progresso', authenticateToken, async (req, res) => {
     try {
         const metas = await query(
-            'SELECT * FROM metas WHERE usuario_id = $1 AND ativo = true',
+            `SELECT m.*, c.nome as categoria_nome, c.icone as categoria_icone
+             FROM metas m
+             LEFT JOIN categorias c ON m.categoria_id = c.id
+             WHERE m.usuario_id = $1 AND m.ativo = true`,
             [req.user.id]
         );
-
 
         const hoje = new Date();
         const mes = hoje.getMonth() + 1;
@@ -76,12 +78,12 @@ router.get('/progresso', authenticateToken, async (req, res) => {
             if (meta.tipo === 'economia') {
                 // Calcular receitas - despesas no período (PostgreSQL)
                 const [receitas, despesas] = await Promise.all([
-                    query(`SELECT SUM(valor) as total FROM receitas 
+                    query(`SELECT COALESCE(SUM(valor), 0) as total FROM receitas 
                            WHERE usuario_id = $1 
                            AND EXTRACT(MONTH FROM data) = $2 
                            AND EXTRACT(YEAR FROM data) = $3`,
                         [req.user.id, mes, ano]),
-                    query(`SELECT SUM(valor) as total FROM despesas 
+                    query(`SELECT COALESCE(SUM(valor), 0) as total FROM despesas 
                            WHERE usuario_id = $1 
                            AND EXTRACT(MONTH FROM data) = $2 
                            AND EXTRACT(YEAR FROM data) = $3`,
@@ -91,7 +93,7 @@ router.get('/progresso', authenticateToken, async (req, res) => {
             } else if (meta.tipo === 'limite_categoria' && meta.categoria_id) {
                 // Calcular despesas da categoria no período
                 const result = await query(
-                    `SELECT SUM(valor) as total FROM despesas 
+                    `SELECT COALESCE(SUM(valor), 0) as total FROM despesas 
                      WHERE usuario_id = $1 
                      AND categoria_id = $2 
                      AND EXTRACT(MONTH FROM data) = $3 
@@ -102,7 +104,7 @@ router.get('/progresso', authenticateToken, async (req, res) => {
             } else if (meta.tipo === 'limite_total') {
                 // Calcular total de despesas no período
                 const result = await query(
-                    `SELECT SUM(valor) as total FROM despesas 
+                    `SELECT COALESCE(SUM(valor), 0) as total FROM despesas 
                      WHERE usuario_id = $1 
                      AND EXTRACT(MONTH FROM data) = $2 
                      AND EXTRACT(YEAR FROM data) = $3`,
@@ -111,14 +113,17 @@ router.get('/progresso', authenticateToken, async (req, res) => {
                 valorAtual = result[0]?.total || 0;
             }
 
+            const percentual = meta.valor_meta > 0 ? (valorAtual / meta.valor_meta) * 100 : 0;
+
             return {
                 ...meta,
                 valor_atual: valorAtual,
-                percentual: (valorAtual / meta.valor_meta) * 100
+                percentual,
+                porcentagem: percentual
             };
         }));
 
-        res.json({ progresso });
+        res.json({ progresso, metas: progresso });
     } catch (error) {
         console.error('Erro ao calcular progresso:', error);
         res.status(500).json({ error: 'Erro ao calcular progresso' });

@@ -144,6 +144,17 @@ function App() {
                     />
 
                     <Route
+                        path="/metas"
+                        element={
+                            <ProtectedRoute>
+                                <AppLayout>
+                                    <GoalsScreen />
+                                </AppLayout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
                         path="/busca"
                         element={
                             <ProtectedRoute>

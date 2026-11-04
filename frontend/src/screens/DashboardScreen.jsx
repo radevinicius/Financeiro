@@ -116,21 +116,28 @@ export default function DashboardScreen() {
     const checkAlerts = async () => {
         try {
             const response = await metasAPI.getProgresso();
-            const metas = response.data.metas || [];
+            const metas = response.data.progresso || response.data.metas || [];
             const newAlerts = [];
 
             metas.forEach(meta => {
-                if (meta.porcentagem >= 100) {
+                const pct = Number(meta.percentual ?? meta.porcentagem ?? 0);
+                const nomeMeta = meta.tipo === 'economia'
+                    ? 'Meta de Economia'
+                    : meta.tipo === 'limite_categoria'
+                        ? `Limite (${meta.categoria_nome || 'Categoria'})`
+                        : 'Limite Total de Gastos';
+
+                if (pct >= 100) {
                     newAlerts.push({
                         id: meta.id,
                         type: 'danger',
-                        message: `🚨 Meta "${meta.nome}" atingiu 100% do limite!`
+                        message: `🚨 ${nomeMeta} atingiu ${pct.toFixed(0)}% da meta!`
                     });
-                } else if (meta.porcentagem >= 90) {
+                } else if (pct >= 90) {
                     newAlerts.push({
                         id: meta.id,
                         type: 'warning',
-                        message: `⚠️ Meta "${meta.nome}" está em ${meta.porcentagem.toFixed(0)}% do limite.`
+                        message: `⚠️ ${nomeMeta} está em ${pct.toFixed(0)}% da meta.`
                     });
                 }
             });
@@ -447,7 +454,7 @@ export default function DashboardScreen() {
                         <Card className="recent-transactions-card" padding="large">
                             <h3 className="chart-title">🕐 Últimas Movimentações</h3>
                             <div className="transactions-list">
-                                {recentTransactions.map((transaction, index) => (
+                                {recentTransactions.map((transaction) => (
                                     <div key={`${transaction.tipo}-${transaction.id}`} className="transaction-item">
                                         <div className="transaction-icon" style={{ backgroundColor: `${transaction.cor}20`, color: transaction.cor }}>
                                             {transaction.categoria_icone || (transaction.tipo === 'despesa' ? '💸' : '💰')}
@@ -463,7 +470,8 @@ export default function DashboardScreen() {
                                             <div className="transaction-date">
                                                 {new Date(transaction.data).toLocaleDateString('pt-BR', {
                                                     day: '2-digit',
-                                                    month: 'short'
+                                                    month: 'short',
+                                                    timeZone: 'UTC'
                                                 })}
                                             </div>
                                         </div>

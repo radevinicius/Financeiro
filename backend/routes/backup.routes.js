@@ -1,8 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.middleware.js';
-import { query, run } from '../database/database.js';
-import fs from 'fs';
-import path from 'path';
+import { query, pool } from '../database/database.js';
 
 const router = express.Router();
 
@@ -15,13 +13,24 @@ const isAdmin = (req, res, next) => {
     }
 };
 
+// Whitelist de tabelas e colunas permitidas para evitar SQL Injection
+const ALLOWED_TABLES_COLUMNS = {
+    usuarios: ['id', 'nome', 'email', 'telefone', 'senha_hash', 'tipo', 'created_at'],
+    categorias: ['id', 'nome', 'tipo', 'usuario_id', 'icone', 'cor', 'created_at'],
+    despesas: ['id', 'usuario_id', 'categoria_id', 'valor', 'data', 'descricao', 'origem', 'created_at'],
+    receitas: ['id', 'usuario_id', 'categoria_id', 'valor', 'data', 'descricao', 'origem', 'created_at'],
+    metas: ['id', 'usuario_id', 'tipo', 'categoria_id', 'valor_meta', 'periodo', 'ativo', 'created_at'],
+    preferencias_usuario: ['id', 'usuario_id', 'tema', 'alertas_email', 'alertas_push', 'idioma', 'created_at'],
+    despesas_fixas: ['id', 'usuario_id', 'nome', 'valor', 'dia_vencimento', 'categoria_id', 'descricao', 'ativo', 'created_at']
+};
+
 /**
  * GET /api/backup/exportar
  * Exportar banco de dados como JSON
  */
 router.get('/exportar', authenticateToken, isAdmin, async (req, res) => {
     try {
-        const tables = ['usuarios', 'categorias', 'despesas', 'receitas', 'metas', 'preferencias_usuario'];
+        const tables = Object.keys(ALLOWED_TABLES_COLUMNS);
         const backup = {};
 
         for (const table of tables) {
@@ -39,9 +48,10 @@ router.get('/exportar', authenticateToken, isAdmin, async (req, res) => {
 
 /**
  * POST /api/backup/importar
- * Importar banco de dados de JSON
+ * Importar banco de dados de JSON usando transação segura
  */
 router.post('/importar', authenticateToken, isAdmin, async (req, res) => {
+    const client = await pool.connect();
     try {
         const backup = req.body;
 
@@ -49,23 +59,27 @@ router.post('/importar', authenticateToken, isAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Formato de backup inválido' });
         }
 
-        // Ordem de importação para respeitar chaves estrangeiras
-        const tables = ['usuarios', 'categorias', 'despesas', 'receitas', 'metas', 'preferencias_usuario'];
+        const tables = Object.keys(ALLOWED_TABLES_COLUMNS);
 
-        // Limpar tabelas existentes (ordem inversa)
+        await client.query('BEGIN');
+
+        // Limpar tabelas existentes (ordem inversa para respeitar FKs)
         for (const table of [...tables].reverse()) {
-            await run(`DELETE FROM ${table}`);
+            await client.query(`DELETE FROM ${table}`);
         }
 
-        // Importar dados
+        // Importar dados validando colunas na whitelist
         for (const table of tables) {
+            const allowedCols = new Set(ALLOWED_TABLES_COLUMNS[table]);
             if (backup[table] && Array.isArray(backup[table])) {
                 for (const row of backup[table]) {
-                    const keys = Object.keys(row);
-                    const values = Object.values(row);
+                    const keys = Object.keys(row).filter(k => allowedCols.has(k));
+                    if (keys.length === 0) continue;
+
+                    const values = keys.map(k => row[k]);
                     const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
 
-                    await run(
+                    await client.query(
                         `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`,
                         values
                     );
@@ -73,10 +87,14 @@ router.post('/importar', authenticateToken, isAdmin, async (req, res) => {
             }
         }
 
+        await client.query('COMMIT');
         res.json({ message: 'Backup importado com sucesso' });
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error('Erro ao importar backup:', error);
         res.status(500).json({ error: 'Erro ao importar backup' });
+    } finally {
+        client.release();
     }
 });
 

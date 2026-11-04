@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -80,7 +80,7 @@ export default function LoginScreen() {
                 <div className="login-footer">
                     <p className="text-secondary text-sm">
                         Não tem uma conta?{' '}
-                        <a href="/register" className="login-link">Crie uma agora</a>
+                        <Link to="/register" className="login-link">Crie uma agora</Link>
                     </p>
                 </div>
             </div>

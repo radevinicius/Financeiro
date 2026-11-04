@@ -1,7 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-
 import Button from '../components/Button';
 import ThemeToggle from '../components/ThemeToggle';
 import { backupAPI } from '../services/api';
@@ -102,21 +101,33 @@ export default function ProfileScreen() {
                             </div>
                         </div>
                     </div>
+                    <div className="ios-list-item" onClick={() => navigate('/metas')}>
+                        <div className="profile-info-item">
+                            <span className="profile-icon">🎯</span>
+                            <div>
+                                <div className="profile-info-label">Metas Financeiras</div>
+                                <div className="profile-info-value">Definir e acompanhar metas</div>
+                            </div>
+                        </div>
+                    </div>
                 </Card>
 
                 {isAdmin() && (
-                    <Card padding="medium" className="admin-card">
+                    <Card
+                        padding="medium"
+                        className="admin-card"
+                        onClick={() => navigate('/admin')}
+                        style={{ cursor: 'pointer' }}
+                    >
                         <div className="admin-card-header">
                             <span className="admin-icon">👑</span>
                             <h3>Painel de Administrador</h3>
                         </div>
                         <p className="text-secondary text-sm">
-                            Como administrador, você tem acesso total ao sistema e pode visualizar dados de todos os usuários.
+                            Como administrador, você tem acesso total ao sistema e pode visualizar dados de todos os usuários. Toque para abrir.
                         </p>
                     </Card>
                 )}
-
-
 
                 {isAdmin() && (
                     <Card padding="none">

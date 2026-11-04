@@ -8,42 +8,54 @@ const router = express.Router();
 
 /**
  * GET /api/relatorios/evolucao
- * Dados para gráfico de evolução temporal
+ * Dados para gráfico de evolução temporal (otimizado com GROUP BY)
  */
 router.get('/evolucao', authenticateToken, async (req, res) => {
     try {
-        const { meses = 6 } = req.query;
+        const numMeses = Math.max(1, Math.min(24, parseInt(req.query.meses) || 6));
+        const hoje = new Date();
+        const dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - (numMeses - 1), 1);
+        const dataInicialStr = `${dataInicial.getFullYear()}-${String(dataInicial.getMonth() + 1).padStart(2, '0')}-01`;
+
+        const [receitasAgrupadas, despesasAgrupadas] = await Promise.all([
+            query(
+                `SELECT EXTRACT(YEAR FROM data)::int AS ano,
+                        EXTRACT(MONTH FROM data)::int AS mes,
+                        COALESCE(SUM(valor), 0) AS total
+                 FROM receitas
+                 WHERE usuario_id = $1 AND data >= $2
+                 GROUP BY ano, mes`,
+                [req.user.id, dataInicialStr]
+            ),
+            query(
+                `SELECT EXTRACT(YEAR FROM data)::int AS ano,
+                        EXTRACT(MONTH FROM data)::int AS mes,
+                        COALESCE(SUM(valor), 0) AS total
+                 FROM despesas
+                 WHERE usuario_id = $1 AND data >= $2
+                 GROUP BY ano, mes`,
+                [req.user.id, dataInicialStr]
+            )
+        ]);
+
+        const mapaReceitas = new Map(receitasAgrupadas.map(r => [`${r.ano}-${r.mes}`, Number(r.total) || 0]));
+        const mapaDespesas = new Map(despesasAgrupadas.map(d => [`${d.ano}-${d.mes}`, Number(d.total) || 0]));
 
         const dados = [];
-        const hoje = new Date();
+        for (let i = numMeses - 1; i >= 0; i--) {
+            const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const mes = d.getMonth() + 1;
+            const ano = d.getFullYear();
+            const chave = `${ano}-${mes}`;
 
-        for (let i = parseInt(meses) - 1; i >= 0; i--) {
-            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-            const mes = data.getMonth() + 1;
-            const ano = data.getFullYear();
-
-            const [receitas, despesas] = await Promise.all([
-                query(
-                    `SELECT COALESCE(SUM(valor), 0) as total FROM receitas 
-                     WHERE usuario_id = $1 
-                     AND EXTRACT(MONTH FROM data) = $2 
-                     AND EXTRACT(YEAR FROM data) = $3`,
-                    [req.user.id, mes, ano]
-                ),
-                query(
-                    `SELECT COALESCE(SUM(valor), 0) as total FROM despesas 
-                     WHERE usuario_id = $1 
-                     AND EXTRACT(MONTH FROM data) = $2 
-                     AND EXTRACT(YEAR FROM data) = $3`,
-                    [req.user.id, mes, ano]
-                )
-            ]);
+            const rec = mapaReceitas.get(chave) || 0;
+            const desp = mapaDespesas.get(chave) || 0;
 
             dados.push({
-                mes: `${mes.toString().padStart(2, '0')}/${ano.toString().substr(2)}`,
-                receitas: receitas[0].total,
-                despesas: despesas[0].total,
-                saldo: receitas[0].total - despesas[0].total
+                mes: `${mes.toString().padStart(2, '0')}/${ano.toString().slice(2)}`,
+                receitas: rec,
+                despesas: desp,
+                saldo: rec - desp
             });
         }
 
@@ -79,6 +91,8 @@ router.get('/pdf', authenticateToken, async (req, res) => {
             )
         ]);
 
+        const formatPdfDate = (d) => new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
         const doc = new PDFDocument();
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=relatorio-${dataInicio}-${dataFim}.pdf`);
@@ -91,17 +105,17 @@ router.get('/pdf', authenticateToken, async (req, res) => {
 
         doc.fontSize(16).text('Receitas');
         receitas.forEach(r => {
-            doc.fontSize(10).text(`${r.data} - ${r.categoria}: R$ ${r.valor.toFixed(2)}`);
+            doc.fontSize(10).text(`${formatPdfDate(r.data)} - ${r.categoria}: R$ ${Number(r.valor || 0).toFixed(2)}`);
         });
 
         doc.moveDown();
         doc.fontSize(16).text('Despesas');
         despesas.forEach(d => {
-            doc.fontSize(10).text(`${d.data} - ${d.categoria}: R$ ${d.valor.toFixed(2)}`);
+            doc.fontSize(10).text(`${formatPdfDate(d.data)} - ${d.categoria}: R$ ${Number(d.valor || 0).toFixed(2)}`);
         });
 
-        const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
-        const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
+        const totalReceitas = receitas.reduce((sum, r) => sum + Number(r.valor || 0), 0);
+        const totalDespesas = despesas.reduce((sum, d) => sum + Number(d.valor || 0), 0);
 
         doc.moveDown();
         doc.fontSize(14).text(`Total Receitas: R$ ${totalReceitas.toFixed(2)}`);
@@ -117,7 +131,7 @@ router.get('/pdf', authenticateToken, async (req, res) => {
 
 /**
  * GET /api/relatorios/excel
- *  Gerar relatório em Excel
+ * Gerar relatório em Excel
  */
 router.get('/excel', authenticateToken, async (req, res) => {
     try {

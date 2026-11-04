@@ -122,7 +122,7 @@ export default function ExpenseScreen() {
         setFormData({
             categoria_id: despesa.categoria_id,
             valor: despesa.valor.toString(),
-            data: new Date(despesa.data).toISOString().split('T')[0],
+            data: String(despesa.data).split('T')[0],
             descricao: despesa.descricao || ''
         });
         setIsModalOpen(true);
@@ -183,10 +183,9 @@ export default function ExpenseScreen() {
 
     const formatDate = (dateString) => {
         if (!dateString) return 'Data inválida';
-        // PostgreSQL retorna TIMESTAMP, então precisamos parsear corretamente
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return 'Data inválida';
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     };
 
     return (

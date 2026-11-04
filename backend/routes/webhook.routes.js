@@ -1,20 +1,31 @@
 import express from 'express';
 import { parseFinancialText } from '../services/nlp.service.js';
-import { run, getOne, query } from '../database/database.js';
+import { run, getOne } from '../database/database.js';
 
 const router = express.Router();
 
 /**
+ * Middleware para validar token de webhook (se WEBHOOK_SECRET estiver configurado)
+ */
+function verifyWebhookSecret(req, res, next) {
+    const configuredSecret = process.env.WEBHOOK_SECRET;
+    if (!configuredSecret) {
+        return next();
+    }
+
+    const providedSecret = req.headers['x-webhook-secret'] || req.query.secret || req.body?.secret;
+    if (providedSecret !== configuredSecret) {
+        return res.status(401).json({ error: 'Webhook secret inválido ou não fornecido' });
+    }
+
+    next();
+}
+
+/**
  * POST /webhook/n8n/despesa
  * Webhook para criar despesa via n8n (áudio → texto)
- * 
- * Body esperado:
- * {
- *   "usuario_id": 1,
- *   "texto": "gastei 50 reais com gasolina hoje"
- * }
  */
-router.post('/n8n/despesa', async (req, res) => {
+router.post('/n8n/despesa', verifyWebhookSecret, async (req, res) => {
     try {
         const { usuario_id, texto } = req.body;
 
@@ -90,14 +101,8 @@ router.post('/n8n/despesa', async (req, res) => {
 /**
  * POST /webhook/n8n/receita
  * Webhook para criar receita via n8n (áudio → texto)
- * 
- * Body esperado:
- * {
- *   "usuario_id": 1,
- *   "texto": "recebi 400 de freela hoje"
- * }
  */
-router.post('/n8n/receita', async (req, res) => {
+router.post('/n8n/receita', verifyWebhookSecret, async (req, res) => {
     try {
         const { usuario_id, texto } = req.body;
 

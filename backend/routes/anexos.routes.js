@@ -7,6 +7,19 @@ import fs from 'fs';
 
 const router = express.Router();
 
+// Helper para verificar se a transação pertence ao usuário logado (ou se é admin)
+async function verifyTransactionOwnership(tipo, transacaoId, user) {
+    if (!['despesa', 'receita'].includes(tipo)) {
+        return false;
+    }
+    const table = tipo === 'despesa' ? 'despesas' : 'receitas';
+    const transacao = await getOne(`SELECT usuario_id FROM ${table} WHERE id = $1`, [transacaoId]);
+    if (!transacao) {
+        return false;
+    }
+    return user.tipo === 'admin' || transacao.usuario_id === user.id;
+}
+
 // Configuração do Multer para upload de arquivos
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -50,6 +63,14 @@ router.post('/', authenticateToken, upload.single('arquivo'), async (req, res) =
             return res.status(400).json({ error: 'Nenhum arquivo enviado' });
         }
 
+        const hasAccess = await verifyTransactionOwnership(transacao_tipo, transacao_id, req.user);
+        if (!hasAccess) {
+            if (fs.existsSync(file.path)) {
+                fs.unlinkSync(file.path);
+            }
+            return res.status(403).json({ error: 'Acesso negado à transação informada' });
+        }
+
         const result = await run(
             `INSERT INTO anexos (transacao_tipo, transacao_id, nome_arquivo, caminho_arquivo, tamanho, mime_type)
              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
@@ -74,6 +95,12 @@ router.post('/', authenticateToken, upload.single('arquivo'), async (req, res) =
 router.get('/:tipo/:id', authenticateToken, async (req, res) => {
     try {
         const { tipo, id } = req.params;
+
+        const hasAccess = await verifyTransactionOwnership(tipo, id, req.user);
+        if (!hasAccess) {
+            return res.status(403).json({ error: 'Acesso negado' });
+        }
+
         const anexos = await query(
             'SELECT * FROM anexos WHERE transacao_tipo = $1 AND transacao_id = $2',
             [tipo, id]
@@ -97,6 +124,11 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
         if (!anexo) {
             return res.status(404).json({ error: 'Anexo não encontrado' });
+        }
+
+        const hasAccess = await verifyTransactionOwnership(anexo.transacao_tipo, anexo.transacao_id, req.user);
+        if (!hasAccess) {
+            return res.status(403).json({ error: 'Acesso negado' });
         }
 
         // Deletar arquivo físico

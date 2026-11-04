@@ -1,8 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { run, getOne } from '../database/database.js';
-import { createDefaultCategories } from '../database/database.js';
+import { run, getOne, createDefaultCategories } from '../database/database.js';
 
 const router = express.Router();
 
@@ -25,6 +24,15 @@ router.post('/register', async (req, res) => {
             return res.status(409).json({ error: 'Email já cadastrado' });
         }
 
+        // Impedir escalonamento de privilégio: apenas o primeiro usuário do banco pode se registrar como admin
+        let userTipo = 'normal';
+        if (tipo === 'admin') {
+            const countResult = await getOne('SELECT COUNT(*) as total FROM usuarios');
+            if (countResult && Number(countResult.total) === 0) {
+                userTipo = 'admin';
+            }
+        }
+
         // Hash da senha
         const senhaHash = await bcrypt.hash(senha, 10);
 
@@ -32,7 +40,7 @@ router.post('/register', async (req, res) => {
         const result = await run(
             `INSERT INTO usuarios (nome, email, telefone, senha_hash, tipo) 
        VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [nome, email, telefone || null, senhaHash, tipo || 'normal']
+            [nome, email, telefone || null, senhaHash, userTipo]
         );
 
         let userId = result.lastInsertRowid;
@@ -50,15 +58,15 @@ router.post('/register', async (req, res) => {
             throw new Error('Falha ao obter ID do usuário criado');
         }
 
-        // Criar categorias padrão
-        createDefaultCategories(userId);
+        // Criar categorias padrão (aguardando conclusão)
+        await createDefaultCategories(userId);
 
         res.status(201).json({
             message: 'Usuário criado com sucesso',
             userId,
             nome,
             email,
-            tipo: tipo || 'normal'
+            tipo: userTipo
         });
     } catch (error) {
         console.error('Erro ao registrar usuário:', error);

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Input from '../components/Input';
-import Button from '../components/Button';
 import { despesasAPI, receitasAPI } from '../services/api';
 import './SearchScreen.css';
 
@@ -11,7 +9,6 @@ export default function SearchScreen() {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [type, setType] = useState('all'); // all, despesa, receita
-    const navigate = useNavigate();
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -28,24 +25,22 @@ export default function SearchScreen() {
     const handleSearch = async () => {
         setLoading(true);
         try {
-            // Fetch all and filter client-side for simplicity/speed in this iteration
-            // In a real large app, this should be a backend search endpoint
             const [despesasRes, receitasRes] = await Promise.all([
                 despesasAPI.getAll(),
                 receitasAPI.getAll()
             ]);
 
-            const despesas = despesasRes.data.despesas.map(d => ({ ...d, type: 'despesa' }));
-            const receitas = receitasRes.data.receitas.map(r => ({ ...r, type: 'receita' }));
+            const despesas = (despesasRes.data.despesas || []).map(d => ({ ...d, type: 'despesa' }));
+            const receitas = (receitasRes.data.receitas || []).map(r => ({ ...r, type: 'receita' }));
 
             let all = [...despesas, ...receitas];
 
             // Filter by query
             const lowerQuery = query.toLowerCase();
             all = all.filter(item =>
-                (item.descricao && item.descricao.toLowerCase().includes(lowerQuery)) ||
-                (item.categoria_nome && item.categoria_nome.toLowerCase().includes(lowerQuery)) ||
-                item.valor.toString().includes(lowerQuery)
+                (item.descricao && String(item.descricao).toLowerCase().includes(lowerQuery)) ||
+                (item.categoria_nome && String(item.categoria_nome).toLowerCase().includes(lowerQuery)) ||
+                String(item.valor).includes(lowerQuery)
             );
 
             // Filter by type
@@ -115,12 +110,12 @@ export default function SearchScreen() {
                                     <div className="search-item-header">
                                         <span className="search-item-category">{item.categoria_nome || 'Sem categoria'}</span>
                                         <span className={`search-item-amount ${item.type === 'receita' ? 'green' : 'red'}`}>
-                                            {item.type === 'receita' ? '+' : '-'} R$ {item.valor.toFixed(2)}
+                                            {item.type === 'receita' ? '+' : '-'} R$ {Number(item.valor || 0).toFixed(2)}
                                         </span>
                                     </div>
                                     <div className="search-item-desc">{item.descricao || 'Sem descrição'}</div>
                                     <div className="search-item-date">
-                                        {new Date(item.data).toLocaleDateString('pt-BR')}
+                                        {new Date(item.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                     </div>
                                 </div>
                             </div>
